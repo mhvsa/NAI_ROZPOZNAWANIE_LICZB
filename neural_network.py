@@ -1,4 +1,4 @@
-from numpy import matrix, vectorize
+from numpy import matrix, vectorize, array_equal
 from numpy.random import random
 from inputs import zeros, ones, twos
 
@@ -28,7 +28,7 @@ for one in ones_input:
     D = matrix([[0], [1], [0]])
     ciag_treningowy.append(wektor_uczacy(X, D))
 
-for two in ones_input:
+for two in twos_input:
     X = matrix(two)
     D = matrix([[0], [0], [1]])
     ciag_treningowy.append(wektor_uczacy(X, D))
@@ -40,42 +40,71 @@ macierz_wag = matrix(-2 * random((liczba_neuronow, liczba_wejsc)) + 1)
 wektor_odchylen = matrix(-2 * random(liczba_neuronow) + 1).transpose()
 wektor_odchylen = matrix(wektor_odchylen)
 
-print(wektor_odchylen)
+# print(macierz_wag)
+# print(wektor_odchylen)
 
 alpha = 0.5
-E_MIN = 0.5
-MAX_EPOK = 15
+E_MIN = 0.01
+MAX_EPOK = 100
 
 ile_epok = 0
 
 unipolarna_funkcja_aktywacji = vectorize(lambda n: 0 if n < 0 else 1)
-aktualizacja_wag = vectorize(lambda w, X, alpha, d, y: w + alpha * (d - y) * X)
+aktualizacja_wag = vectorize(lambda w, X, alpha, d, y: w + (alpha * (d - y) * X))
 aktualizacja_odchylen = vectorize(lambda b, alpha, d, y: b + alpha * (d - y))
 
 
 def ucz(ciag_uczacy: [wektor_uczacy], macierz_wag, wektor_odchylen, E, E_MIN, ile_epok, MAX_EPOK):
-    nowe_wagi = macierz_wag
+    nowe_wagi = matrix(macierz_wag)
     for wektor in ciag_uczacy:
         X = wektor.X
         D = wektor.D
-        nowe_wagi = macierz_wag
-        Y = unipolarna_funkcja_aktywacji(matrix(macierz_wag) * matrix(X) + matrix(wektor_odchylen))
-        for i in enumerate(nowe_wagi):
-            Wi = nowe_wagi[i]
-            bi = wektor_odchylen[i]
-            d = D[i]
-            y = Y[i]
-            aktualizacja_wag(Wi, X, alpha, d, y)
-            aktualizacja_odchylen(bi, alpha, d, y)
-            Y = unipolarna_funkcja_aktywacji(matrix(macierz_wag) * matrix(wektor) + matrix(wektor_odchylen))
-            y = Y[i]
-            E += (d - y) ** 2
+        Y = unipolarna_funkcja_aktywacji(matrix(nowe_wagi) * matrix(X) + matrix(wektor_odchylen))
+        i = 0  # tymczasowo
+        if (not array_equal(D, Y)):
+            for W in nowe_wagi:
+                Wi = nowe_wagi[i]
+                bi = wektor_odchylen[i]
+                d:int = D.item(i)
+                y:int = Y.item(i)
+                Xt = X.transpose()
+                Wi = aktualizacja_wag(Wi, Xt, alpha, d, y)
+                bi = aktualizacja_odchylen(bi, alpha, d, y)
+                nowe_wagi[i] = Wi
+                wektor_odchylen[i] = bi
+                Y = unipolarna_funkcja_aktywacji(matrix(nowe_wagi) * matrix(X) + matrix(wektor_odchylen))
+                # y = Y[i]
+                E:float = E + (d - y) ** 2
+                i += 1  # tymczasowo
     E *= 0.5
-    if (nowe_wagi == macierz_wag or E < E_MIN or ile_epok >= MAX_EPOK):
+    ile_epok += 1
+    brak_zmiany_wag = array_equal(nowe_wagi, macierz_wag)
+    if (brak_zmiany_wag or E < E_MIN or ile_epok >= MAX_EPOK):
+        print("brak zmiany wag: {0}, E = {1}, ile epok = {2}".format(brak_zmiany_wag,E,ile_epok))
         return {"wagi": nowe_wagi, "wektor_odchylen": wektor_odchylen,
-                "info": "Trening trwał {0} epok.".format(ile_epok)}
+                "info": "Trening trwał {0} epok. Blad wynosi {1}".format(ile_epok,E), "epoki": ile_epok, "blad": E}
     else:
         return ucz(ciag_uczacy, nowe_wagi, wektor_odchylen, E, E_MIN, ile_epok, MAX_EPOK)
 
 
-siec = ucz(ciag_treningowy,macierz_wag,wektor_odchylen,0,E_MIN,0,MAX_EPOK)
+siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
+# print(siec["info"])
+# print(siec["wagi"])
+# print(siec["wektor_odchylen"])
+
+wagi = siec["wagi"]
+bias = siec["wektor_odchylen"]
+blad = siec["blad"];
+while(blad > 1):
+    macierz_wag = matrix(-2 * random((liczba_neuronow, liczba_wejsc)) + 1)
+    wektor_odchylen = matrix(-2 * random(liczba_neuronow) + 1).transpose()
+    wektor_odchylen = matrix(wektor_odchylen)
+    siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
+    blad = siec["blad"];
+
+
+
+for wektor in ciag_treningowy:
+    X = wektor.X
+    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(X) + matrix(siec["wektor_odchylen"]))
+    print(Y)

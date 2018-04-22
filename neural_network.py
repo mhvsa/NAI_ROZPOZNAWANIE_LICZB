@@ -18,21 +18,21 @@ class wektor_uczacy:
 
 ciag_treningowy = []
 
-for zero in zeros_input:
+for zero in zeros_input[0:][::2]:
     X = matrix(zero)
     D = matrix([[1], [0], [0]])
     ciag_treningowy.append(wektor_uczacy(X, D))
 
-for one in ones_input:
+for one in ones_input[0:][::2]:
     X = matrix(one)
     D = matrix([[0], [1], [0]])
     ciag_treningowy.append(wektor_uczacy(X, D))
 
-for two in twos_input:
+for two in twos_input[0:][::2]:
     X = matrix(two)
     D = matrix([[0], [0], [1]])
     ciag_treningowy.append(wektor_uczacy(X, D))
-
+print(ciag_treningowy.__len__())
 liczba_neuronow = 3
 liczba_wejsc = 24
 
@@ -65,24 +65,24 @@ def ucz(ciag_uczacy: [wektor_uczacy], macierz_wag, wektor_odchylen, E, E_MIN, il
             for W in nowe_wagi:
                 Wi = nowe_wagi[i]
                 bi = wektor_odchylen[i]
-                d:int = D.item(i)
-                y:int = Y.item(i)
+                d: int = D.item(i)
+                y: int = Y.item(i)
                 Xt = X.transpose()
                 Wi = aktualizacja_wag(Wi, Xt, alpha, d, y)
                 bi = aktualizacja_odchylen(bi, alpha, d, y)
                 nowe_wagi[i] = Wi
                 wektor_odchylen[i] = bi
                 Y = unipolarna_funkcja_aktywacji(matrix(nowe_wagi) * matrix(X) + matrix(wektor_odchylen))
-                # y = Y[i]
-                E:float = E + (d - y) ** 2
+                # y = Y.item(i)
+                E: float = E + (d - y) ** 2
                 i += 1  # tymczasowo
     E *= 0.5
     ile_epok += 1
     brak_zmiany_wag = array_equal(nowe_wagi, macierz_wag)
     if (brak_zmiany_wag or E < E_MIN or ile_epok >= MAX_EPOK):
-        print("brak zmiany wag: {0}, E = {1}, ile epok = {2}".format(brak_zmiany_wag,E,ile_epok))
+        print("brak zmiany wag: {0}, E = {1}, ile epok = {2}".format(brak_zmiany_wag, E, ile_epok))
         return {"wagi": nowe_wagi, "wektor_odchylen": wektor_odchylen,
-                "info": "Trening trwał {0} epok. Blad wynosi {1}".format(ile_epok,E), "epoki": ile_epok, "blad": E}
+                "info": "Trening trwał {0} epok. Blad wynosi {1}".format(ile_epok, E), "epoki": ile_epok, "blad": E}
     else:
         return ucz(ciag_uczacy, nowe_wagi, wektor_odchylen, E, E_MIN, ile_epok, MAX_EPOK)
 
@@ -95,16 +95,47 @@ siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
 wagi = siec["wagi"]
 bias = siec["wektor_odchylen"]
 blad = siec["blad"];
-while(blad > 1):
+while (blad > 1):
     macierz_wag = matrix(-2 * random((liczba_neuronow, liczba_wejsc)) + 1)
     wektor_odchylen = matrix(-2 * random(liczba_neuronow) + 1).transpose()
     wektor_odchylen = matrix(wektor_odchylen)
     siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
     blad = siec["blad"];
 
+# for wektor in ciag_treningowy:
+#     X = wektor.X
+#     Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(X) + matrix(siec["wektor_odchylen"]))
+#     print(Y)
 
 
-for wektor in ciag_treningowy:
-    X = wektor.X
-    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(X) + matrix(siec["wektor_odchylen"]))
-    print(Y)
+# TESTY
+
+print("==== Testy dla zer ====")
+
+d0 = matrix([[1], [0], [0]])
+
+testy_zero = zeros_input[1:][::2]
+
+for wektor in testy_zero:
+    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+    print(array_equal(d0, Y))
+
+print("==== Testy dla jedynek ====")
+
+testy_ones = ones_input[1:][::2]
+
+d1 = matrix([[0], [1], [0]])
+
+for wektor in testy_ones:
+    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+    print(array_equal(d1, Y))
+
+print("=== Testy dla dwojek ===")
+
+testy_twos = twos_input[1:][::2]
+
+d2 = matrix([[0], [0], [1]])
+
+for wektor in testy_twos:
+    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+    print(array_equal(d2, Y))

@@ -95,47 +95,92 @@ siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
 wagi = siec["wagi"]
 bias = siec["wektor_odchylen"]
 blad = siec["blad"];
-while (blad > 1):
+
+bledne_testy = 100
+
+
+while (blad > 1 or bledne_testy > 1):
+    bledne_testy = 0
     macierz_wag = matrix(-2 * random((liczba_neuronow, liczba_wejsc)) + 1)
     wektor_odchylen = matrix(-2 * random(liczba_neuronow) + 1).transpose()
     wektor_odchylen = matrix(wektor_odchylen)
     siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
-    blad = siec["blad"];
+    blad = siec["blad"]
+    if(blad > 1): continue
+    print("==== Testy dla zer ====")
 
-# for wektor in ciag_treningowy:
-#     X = wektor.X
-#     Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(X) + matrix(siec["wektor_odchylen"]))
-#     print(Y)
+    d0 = matrix([[1], [0], [0]])
+
+    testy_zero = zeros_input[1:][::2]
+
+    for wektor in testy_zero:
+        Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+        print(array_equal(d0, Y))
+
+    print("==== Testy dla jedynek ====")
+
+    testy_ones = ones_input[1:][::2]
+
+    d1 = matrix([[0], [1], [0]])
+
+    for wektor in testy_ones:
+        Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+        print(array_equal(d1, Y))
+
+    print("=== Testy dla dwojek ===")
+
+    testy_twos = twos_input[1:][::2]
+
+    d2 = matrix([[0], [0], [1]])
+
+    for wektor in testy_twos:
+        Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+        wynik_testu = array_equal(d2, Y)
+        if (wynik_testu == False):
+            bledne_testy += 1
+        print(wynik_testu)
+
+# print("==== Testy dla zer ====")
+#
+# d0 = matrix([[1], [0], [0]])
+#
+# testy_zero = zeros_input[1:][::2]
+#
+# for wektor in testy_zero:
+#     Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+#     print(array_equal(d0, Y))
+#
+# print("==== Testy dla jedynek ====")
+#
+# testy_ones = ones_input[1:][::2]
+#
+# d1 = matrix([[0], [1], [0]])
+#
+# for wektor in testy_ones:
+#     Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+#     print(array_equal(d1, Y))
+#
+# print("=== Testy dla dwojek ===")
+#
+# testy_twos = twos_input[1:][::2]
+#
+# d2 = matrix([[0], [0], [1]])
+#
+# for wektor in testy_twos:
+#     Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
+#     wynik_testu = array_equal(d2, Y)
+#     if(wynik_testu == False):
+#         bledne_testy += 1
+#     print(wynik_testu)
 
 
-# TESTY
 
-print("==== Testy dla zer ====")
 
-d0 = matrix([[1], [0], [0]])
-
-testy_zero = zeros_input[1:][::2]
-
-for wektor in testy_zero:
-    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
-    print(array_equal(d0, Y))
-
-print("==== Testy dla jedynek ====")
-
-testy_ones = ones_input[1:][::2]
-
-d1 = matrix([[0], [1], [0]])
-
-for wektor in testy_ones:
-    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
-    print(array_equal(d1, Y))
-
-print("=== Testy dla dwojek ===")
-
-testy_twos = twos_input[1:][::2]
-
-d2 = matrix([[0], [0], [1]])
-
-for wektor in testy_twos:
-    Y = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(wektor) + matrix(siec["wektor_odchylen"]))
-    print(array_equal(d2, Y))
+def getAnswer(input: matrix):
+    Y:matrix = unipolarna_funkcja_aktywacji(matrix(siec["wagi"]) * matrix(input) + matrix(siec["wektor_odchylen"]))
+    if(Y.item(0) == 1):
+        print("To jest zero!")
+    if(Y.item(1) == 1):
+        print("To jest jeden!")
+    if(Y.item(2) == 1):
+        print("To jest dwa!")

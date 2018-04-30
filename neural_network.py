@@ -84,7 +84,7 @@ def ucz(ciag_uczacy: [wektor_uczacy], macierz_wag, wektor_odchylen, E, E_MIN, il
         return {"wagi": nowe_wagi, "wektor_odchylen": wektor_odchylen,
                 "info": "Trening trwał {0} epok. Blad wynosi {1}".format(ile_epok, E), "epoki": ile_epok, "blad": E}
     else:
-        return ucz(ciag_uczacy, nowe_wagi, wektor_odchylen, E, E_MIN, ile_epok, MAX_EPOK)
+        return ucz(ciag_uczacy, nowe_wagi, wektor_odchylen, 0, E_MIN, ile_epok, MAX_EPOK)
 
 
 siec = ucz(ciag_treningowy, macierz_wag, wektor_odchylen, 0, E_MIN, 0, MAX_EPOK)
@@ -99,7 +99,7 @@ blad = siec["blad"];
 bledne_testy = 100
 
 
-while (blad > 1 or bledne_testy > 1):
+while (blad > 1 or bledne_testy > 2):
     bledne_testy = 0
     macierz_wag = matrix(-2 * random((liczba_neuronow, liczba_wejsc)) + 1)
     wektor_odchylen = matrix(-2 * random(liczba_neuronow) + 1).transpose()
